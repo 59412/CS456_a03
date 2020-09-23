@@ -1,0 +1,77 @@
+#!/usr/bin/python
+import socket
+import time
+import sys
+
+
+def client_finish(host, port, key):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((host,port))
+
+    sock.send(key)
+
+    sock.close()
+
+
+def client_download(host, port, key, file, recv_size):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((host,port))
+
+    data = key
+    sock.send(data)
+
+    print("request for " + file + " sent\n" )
+    print("key value:" + key + "\n")
+
+    f = open(file, "w")
+
+    while 1:
+        data = sock.recv(recv_size)
+        if len(data) == 0:
+            break
+        else:
+            f.write(data)
+
+    print("downloader received " + file + "\n")
+    print("key value:" + key + "\n")
+
+    f.close()
+    sock.close()
+
+
+def client_upload(host, port, key, file, send_size, wait_time):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((host,port))
+
+    data = key
+    sock.send(data)
+
+    time.sleep(wait_time/1000)
+
+    f = open(file, 'r')
+
+    while 1:
+        l = f.read(send_size)
+        if not l:
+            break
+        sock.send(l)
+
+    f.close()
+    sock.close()
+    print("request for " + file + "fulfilled\n")
+    print("key value:" + key + "\n")
+
+
+key = sys.argv[3]
+port_number = int(sys.argv[2])
+if key[0] == 'F':
+    client_finish(sys.argv[1],port_number,key)
+elif key[0] == 'G':
+    recv_size = int(sys.argv[5])
+    client_download(sys.argv[1],port_number,sys.argv[3],sys.argv[4],recv_size)
+elif key[0] == 'P':
+    sent_size = int(sys.argv[5])
+    sleep_time = int(sys.argv[6])
+    client_upload(sys.argv[1],port_number,sys.argv[3],sys.argv[4],sent_size,sleep_time)
+else:
+    print("invalid operation\n")
